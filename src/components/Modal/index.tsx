@@ -12,8 +12,8 @@ export function Modal({isOpen, children, setIsOpen}: ModalProps){
   const [ modalStatus, setModalStatus] = useState(isOpen);
 
   useEffect(()=>{
-    setModalStatus(!isOpen)
-  },[isOpen])
+    setModalStatus(isOpen)
+  },[isOpen]);
 
 
   return(
@@ -45,34 +45,3 @@ export function Modal({isOpen, children, setIsOpen}: ModalProps){
       </ReactModal>
   )
 }
-
-// class Modal extends Component {
-//   constructor(props) {
-//     super(props);
-
-//     const { isOpen } = this.props;
-//     this.state = {
-//       modalStatus: isOpen
-//     }
-//   }
-
-//   componentDidUpdate(prevProps) {
-//     const { isOpen } = this.props;
-
-//     if (prevProps.isOpen !== isOpen) {
-//       console.log(this.props)
-//       this.setState({ modalStatus: isOpen })
-//     }
-//   }
-
-//   render() {
-//     const { children, setIsOpen } = this.props;
-//     const { modalStatus } = this.state;
-
-//     return (
-      
-//     );
-//   }
-// };
-
-// export default Modal;

@@ -30,5 +30,3 @@ export function Header({openModal}: HeaderProps) {
     )
 
 };
-
-export default Header;

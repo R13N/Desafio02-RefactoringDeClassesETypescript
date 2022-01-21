@@ -1,46 +1,53 @@
-import { Component } from 'react';
+import { useState } from 'react';
 
 import api from '../../services/api';
 import { Header } from '../../components/Header';
 import { Food } from '../../components/Food';
 import { ModalAddFood } from '../../components/ModalAddFood';
-import ModalEditFood from '../../components/ModalEditFood';
+import { ModalEditFood } from '../../components/ModalEditFood';
 import { FoodsContainer } from './styles';
+import { useEffect } from 'react';
 
-class Dashboard extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      foods: [],
-      editingFood: {},
-      modalOpen: false,
-      editModalOpen: false,
-    }
-  }
+interface IFoodAdd {
+  name: string;
+  description: string;
+  price: string;
+  image: string;
+}
 
-  async componentDidMount() {
-    const response = await api.get('/foods');
+interface IFood {
+  id:number;
+  name:string;
+  description:string;
+  price:string;
+  available:boolean;
+  image:string;
+}
 
-    this.setState({ foods: response.data });
-  }
+export default function Dashboard() {
+  const [foods, setFoods] = useState<IFood[]>([]);
+  const [editingFood, setEditingFood] = useState<IFood>({} as IFood);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
-  handleAddFood = async food => {
-    const { foods } = this.state;
+  useEffect(() => {
+    api.get('/foods').then(response => setFoods(response.data));
+  }, [])
 
+  const handleAddFood = async (food: IFoodAdd): Promise<void> => {
     try {
       const response = await api.post('/foods', {
         ...food,
         available: true,
       });
 
-      this.setState({ foods: [...foods, response.data] });
+      setFoods([...foods, response.data]);
     } catch (err) {
       console.log(err);
     }
   }
 
-  handleUpdateFood = async food => {
-    const { foods, editingFood } = this.state;
+  const handleUpdateFood = async (food: IFoodAdd) => {
 
     try {
       const foodUpdated = await api.put(
@@ -52,70 +59,60 @@ class Dashboard extends Component {
         f.id !== foodUpdated.data.id ? f : foodUpdated.data,
       );
 
-      this.setState({ foods: foodsUpdated });
+      setFoods(foodsUpdated);
     } catch (err) {
       console.log(err);
     }
   }
 
-  handleDeleteFood = async id => {
-    const { foods } = this.state;
+  const handleDeleteFood = async (id: number) => {
 
     await api.delete(`/foods/${id}`);
 
     const foodsFiltered = foods.filter(food => food.id !== id);
 
-    this.setState({ foods: foodsFiltered });
+    setFoods(foodsFiltered);
   }
 
-  toggleModal = () => {
-    const { modalOpen } = this.state;
-
-    this.setState({ modalOpen: !modalOpen });
+  const toggleModal = () => {
+    setModalOpen(!modalOpen);
   }
 
-  toggleEditModal = () => {
-    const { editModalOpen } = this.state;
-
-    this.setState({ editModalOpen: !editModalOpen });
+  const toggleEditModal = () => {
+    setEditModalOpen(!editModalOpen);
   }
 
-  handleEditFood = food => {
-    this.setState({ editingFood: food, editModalOpen: true });
+  const handleEditFood = (food: IFood) => {
+    setEditingFood(food) 
+    setEditModalOpen(true);
   }
 
-  render() {
-    const { modalOpen, editModalOpen, editingFood, foods } = this.state;
+  return (
+    <>
+      <Header openModal={toggleModal} />
+      <ModalAddFood
+        isOpen={modalOpen}
+        setIsOpen={toggleModal}
+        handleAddFood={handleAddFood}
+      />
+      <ModalEditFood
+        isOpen={editModalOpen}
+        setIsOpen={toggleEditModal}
+        editingFood={editingFood}
+        handleUpdateFood={handleUpdateFood}
+      />
 
-    return (
-      <>
-        <Header openModal={this.toggleModal} />
-        <ModalAddFood
-          isOpen={modalOpen}
-          setIsOpen={this.toggleModal}
-          handleAddFood={this.handleAddFood}
-        />
-        <ModalEditFood
-          isOpen={editModalOpen}
-          setIsOpen={this.toggleEditModal}
-          editingFood={editingFood}
-          handleUpdateFood={this.handleUpdateFood}
-        />
-
-        <FoodsContainer data-testid="foods-list">
-          {foods &&
-            foods.map(food => (
-              <Food
-                key={food.id}
-                food={food}
-                handleDelete={this.handleDeleteFood}
-                handleEditFood={this.handleEditFood}
-              />
-            ))}
-        </FoodsContainer>
-      </>
-    );
-  }
-};
-
-export default Dashboard;
+      <FoodsContainer data-testid="foods-list">
+        {foods &&
+          foods.map(food => (
+            <Food
+              key={food.id}
+              food={food}
+              handleDelete={handleDeleteFood}
+              handleEditFood={handleEditFood}
+            />
+          ))}
+      </FoodsContainer>
+    </>
+  );
+}
